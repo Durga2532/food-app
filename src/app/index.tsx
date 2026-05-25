@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { fetchRestaurants } from "../services/yelp";
@@ -23,6 +24,7 @@ export default function Index() {
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [query, setQuery] = useState("restaurants");
 
   const locationRef = useRef<{ lat: number; long: number } | null>(null);
 
@@ -65,7 +67,7 @@ export default function Index() {
         longitude = loc.longitude;
       }
 
-      const res = await fetchRestaurants(latitude, longitude, newOffset);
+      const res = await fetchRestaurants(latitude, longitude, query, newOffset);
       const items: Restaurant[] = res?.businesses ?? [];
 
       setRestaurants((prev) => (newOffset === 0 ? items : [...prev, ...items]));
@@ -109,6 +111,19 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.searchContainer}>
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search food, cafes, sushi..."
+          placeholderTextColor="#888"
+          style={styles.input}
+        />
+
+        <Pressable style={styles.searchBtn} onPress={() => loadRestaurants(0)}>
+          <Text style={styles.searchBtnText}>Search</Text>
+        </Pressable>
+      </View>
       {current ? (
         <View style={styles.card}>
           {/* Favorite */}
@@ -257,5 +272,37 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 5,
     zIndex: 10,
+  },
+  searchContainer: {
+    width: "92%",
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 20,
+  },
+
+  input: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+
+  searchBtn: {
+    backgroundColor: "#000",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    justifyContent: "center",
+  },
+
+  searchBtnText: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });
