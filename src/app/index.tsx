@@ -1,98 +1,152 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+type Restaurant = {
+  id: string;
+  name: string;
+  image_url: string;
+  rating: number;
+};
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
+export default function Index() {
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [index, setIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  // TODO: replace with real location + Yelp API
+  useEffect(() => {
+    fetchRestaurants();
+  }, []);
+
+  const fetchRestaurants = async () => {
+    try {
+      setLoading(true);
+
+      // MOCK DATA FIRST (replace later with Yelp API)
+      const mock: Restaurant[] = [
+        {
+          id: "1",
+          name: "Pizza Place",
+          image_url: "https://source.unsplash.com/600x400/?pizza",
+          rating: 4.5,
+        },
+        {
+          id: "2",
+          name: "Burger House",
+          image_url: "https://source.unsplash.com/600x400/?burger",
+          rating: 4.2,
+        },
+        {
+          id: "3",
+          name: "Sushi Spot",
+          image_url: "https://source.unsplash.com/600x400/?sushi",
+          rating: 4.8,
+        },
+      ];
+
+      setRestaurants(mock);
+      setIndex(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const nextCard = () => {
+    if (index < restaurants.length - 1) {
+      setIndex(index + 1);
+    }
+  };
+
+  const prevCard = () => {
+    if (index > 0) {
+      setIndex(index - 1);
+    }
+  };
+
+  if (loading) {
     return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+      </View>
     );
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+
+  const current = restaurants[index];
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <View style={styles.container}>
+      {current ? (
+        <View style={styles.card}>
+          <Image source={{ uri: current.image_url }} style={styles.image} />
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+          <Text style={styles.name}>{current.name}</Text>
+          <Text style={styles.rating}>⭐ {current.rating}</Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+          <View style={styles.buttons}>
+            <Pressable onPress={prevCard} style={styles.button}>
+              <Text>Prev</Text>
+            </Pressable>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+            <Pressable onPress={nextCard} style={styles.button}>
+              <Text>Next</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : (
+        <Text>No restaurants found</Text>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
-  safeArea: {
+  center: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+  card: {
+    width: "90%",
+    borderRadius: 16,
+    padding: 16,
+    backgroundColor: "#f5f5f5",
+    alignItems: "center",
   },
-  title: {
-    textAlign: 'center',
+  image: {
+    width: "100%",
+    height: 200,
+    borderRadius: 12,
   },
-  code: {
-    textTransform: 'uppercase',
+  name: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginTop: 12,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  rating: {
+    marginTop: 4,
+    fontSize: 16,
+  },
+  buttons: {
+    flexDirection: "row",
+    marginTop: 16,
+    gap: 20,
+  },
+  button: {
+    padding: 10,
+    backgroundColor: "#ddd",
+    borderRadius: 8,
   },
 });
